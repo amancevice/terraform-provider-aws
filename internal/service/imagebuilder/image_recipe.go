@@ -190,6 +190,11 @@ func ResourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"systems_manager_agent": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -389,6 +394,12 @@ func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Imagebuilder Image Recipe version %q", d.Id())
+		return diags
+	}
+
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteImageRecipeInput{
